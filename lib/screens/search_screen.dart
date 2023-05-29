@@ -41,6 +41,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context).size;
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -144,7 +145,8 @@ class _SearchScreenState extends State<SearchScreen> {
                         );
                       }
                     }
-                    return CustomScrollView(slivers: [
+                    return CustomScrollView(
+                    slivers: [
                       SliverPadding(
                         padding: const EdgeInsets.only(top: 14, bottom: 8),
                         sliver: SliverGrid(
@@ -161,11 +163,11 @@ class _SearchScreenState extends State<SearchScreen> {
                             childCount: store.state?.value?.length,
                           ),
                           gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
+                              SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 5,
                             mainAxisSpacing: 0,
-                            childAspectRatio: 0.555,
+                            childAspectRatio: (mediaQuery.width)/(mediaQuery.height * 0.901),
                           ),
                         ),
                       ),
