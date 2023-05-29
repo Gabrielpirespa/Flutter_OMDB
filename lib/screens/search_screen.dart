@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_http/components/movie_card.dart';
 import 'package:flutter_http/data/repositories/movies_repository.dart';
+import 'package:flutter_http/screens/details_screen.dart';
 import 'package:flutter_http/screens/stores/movie_store.dart';
 import 'package:flutter_http/services/http_client.dart';
 
@@ -63,30 +64,33 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
           child: Column(
             children: [
-              TextField(
-                controller: searchController,
-                style: const TextStyle(color: Colors.white, fontSize: 17),
-                cursorWidth: 1,
-                cursorColor: Colors.white54,
-                textAlign: TextAlign.center,
-                onChanged: (String search) {
-                  if (search.length >= 3) {
-                    search = searchController.text;
-                    _onSearchChanged(search);
-                  }
-                },
-                decoration: InputDecoration(
-                    prefixIcon: const Icon(
-                      Icons.search_outlined,
-                      color: Colors.white54,
-                    ),
-                    filled: true,
-                    fillColor: const Color.fromRGBO(45, 45, 45, 0.1),
-                    border: UnderlineInputBorder(
-                        borderSide: BorderSide.none,
-                        borderRadius: BorderRadius.circular(20)),
-                    hintText: "Search a movie",
-                    hintStyle: const TextStyle(color: Colors.white54, fontSize: 18)),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: TextField(
+                  controller: searchController,
+                  style: const TextStyle(color: Colors.white, fontSize: 17),
+                  cursorWidth: 1,
+                  cursorColor: Colors.white54,
+                  textAlign: TextAlign.center,
+                  onChanged: (String search) {
+                    if (search.length >= 3) {
+                      search = searchController.text;
+                      _onSearchChanged(search);
+                    }
+                  },
+                  decoration: InputDecoration(
+                      prefixIcon: const Icon(
+                        Icons.search_outlined,
+                        color: Colors.white54,
+                      ),
+                      filled: true,
+                      fillColor: const Color.fromRGBO(45, 45, 45, 0.1),
+                      border: UnderlineInputBorder(
+                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(20)),
+                      hintText: "Search a movie",
+                      hintStyle: const TextStyle(color: Colors.white54, fontSize: 18)),
+                ),
               ),
               Expanded(
                 child: AnimatedBuilder(
@@ -142,12 +146,16 @@ class _SearchScreenState extends State<SearchScreen> {
                     }
                     return CustomScrollView(slivers: [
                       SliverPadding(
-                        padding: const EdgeInsets.only(top: 24, bottom: 8),
+                        padding: const EdgeInsets.only(top: 14, bottom: 8),
                         sliver: SliverGrid(
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
-                              return MovieCard(
-                                movie: store.state?.value?[index],
+                              return InkWell(
+                                child: MovieCard(
+                                  movie: store.state?.value?[index],
+                                ),
+                                onTap: () => Navigator.push(context,
+                                MaterialPageRoute(builder: (context) => DetailsScreen(id: store.state?.value?[index].imdbID,))),
                               );
                             },
                             childCount: store.state?.value?.length,

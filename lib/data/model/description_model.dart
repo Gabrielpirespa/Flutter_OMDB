@@ -23,7 +23,7 @@ class DescriptionModel {
     this.Type,
   });
 
-  factory DescriptionModel.fromMap(Map<String, dynamic> map) { //Este factory pega os mapas do JSON e transforma em um objeto DescriptionModel.
+  factory DescriptionModel.fromJson(Map<String, dynamic> map) { //Este factory pega os mapas do JSON e transforma em um objeto DescriptionModel.
     return DescriptionModel(
       Title: map['Title'],
       Year: map['Year'],
