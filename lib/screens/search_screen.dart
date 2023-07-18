@@ -1,10 +1,13 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_http/components/error_pattern.dart';
+import 'package:flutter_http/components/loading.dart';
 import 'package:flutter_http/components/movie_card.dart';
+import 'package:flutter_http/data/bloc/movies_bloc/movies_bloc.dart';
+import 'package:flutter_http/data/bloc/movies_bloc/movies_event.dart';
+import 'package:flutter_http/data/bloc/movies_bloc/movies_state.dart';
 import 'package:flutter_http/data/repositories/movies_repository.dart';
 import 'package:flutter_http/screens/details_screen.dart';
-import 'package:flutter_http/screens/stores/movie_store.dart';
 import 'package:flutter_http/services/http_client.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -17,26 +20,36 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController searchController = TextEditingController();
 
-  final MovieStore store = MovieStore(
-    //Instância da store.
-    repository: MoviesRepository(
-      client: HttpClient(),
-    ),
-  );
+  late final MoviesBloc _moviesBloc;
+
+  @override
+  void initState() {
+    _moviesBloc = MoviesBloc(
+      repository: MoviesRepository(
+        client: HttpClient(),
+      ),
+    );
+    super.initState();
+  }
 
   Timer? _debounce; //Cria uma variável para atribuir o delay do Timer.
 
   _onSearchChanged(String search) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 900), () {
-      store.getMovies(search); //Faz a chamada a api uma única vez após 1,5 segundos da alteração do texto
+      _moviesBloc.inputMovies.add(
+        GetMovies(
+          search: search,
+        ),
+      ); //Faz a chamada a api através do BLoC uma única vez após 1,5 segundos da alteração do texto
     });
   }
 
   @override
   void dispose() {
-    _debounce?.cancel();
     super.dispose();
+    _moviesBloc.inputMovies.close();
+    _debounce?.cancel();
   }
 
   @override
@@ -90,88 +103,67 @@ class _SearchScreenState extends State<SearchScreen> {
                           borderSide: BorderSide.none,
                           borderRadius: BorderRadius.circular(20)),
                       hintText: "Search a movie",
-                      hintStyle: const TextStyle(color: Colors.white54, fontSize: 18)),
+                      hintStyle:
+                          const TextStyle(color: Colors.white54, fontSize: 18)),
                 ),
               ),
               Expanded(
-                child: AnimatedBuilder(
-                  //Como existem três variáves reativas passamos a lista delas no animation com o Listenable.merge.
-                  animation: Listenable.merge([
-                    store.isLoading,
-                    store.error,
-                    store.state,
-                  ]),
-                  builder: (BuildContext context, Widget? child) {
-                    if (store.isLoading.value == true) {
+                child: StreamBuilder<MoviesState>(
+                  stream: _moviesBloc.outputMovies,
+                  builder: (context, state) {
+                    if (state.data is MoviesInitialState) {
                       return const Center(
-                        child: CircularProgressIndicator(
-                          color: Colors.indigoAccent,
+                        child: Text(
+                          "Search for a Movie in the IMDB database",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 24,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
                         ),
                       );
-                    } else if (store.error.value.isNotEmpty) {
-                      return Center(
-                        child: Text(store.error.value),
-                      );
-                    } else if (store.state?.value == null) {
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.error_outline_rounded, color: Colors.white, size: 70,),
-                          Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: Text(
-                              "Movie not found",
-                              style: TextStyle(
-                                fontSize: 24,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                    } else if (state.data is MoviesLoadingState) {
+                      return const Loading();
+                    } else if (state.data is MoviesNotFoundErrorState) {
+                      return const ErrorPattern(errorText: "Movie not found",);
+                    } else if (state.data is MoviesLoadedState) {
+                      final list = state.data?.movies;
+
+                      return CustomScrollView(slivers: [
+                        SliverPadding(
+                          padding: const EdgeInsets.only(top: 14, bottom: 8),
+                          sliver: SliverGrid(
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                return InkWell(
+                                  child: MovieCard(
+                                    movie: list?[index],
+                                  ),
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => DetailsScreen(
+                                        id: list?[index].imdbID,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                              childCount: list?.length,
+                            ),
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 5,
+                              mainAxisSpacing: 0,
+                              childAspectRatio: (mediaQuery.width) /
+                                  (mediaQuery.height * 0.901),
                             ),
                           ),
-                        ],
-                      );
-                    } else if (store.state?.value != null) {
-                      if (store.state!.value!.isEmpty) {
-                        return const Center(
-                          child: Text(
-                            "Search for a Movie in the IMDB database",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 24,
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        );
-                      }
-                    }
-                    return CustomScrollView(
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.only(top: 14, bottom: 8),
-                        sliver: SliverGrid(
-                          delegate: SliverChildBuilderDelegate(
-                            (context, index) {
-                              return InkWell(
-                                child: MovieCard(
-                                  movie: store.state?.value?[index],
-                                ),
-                                onTap: () => Navigator.push(context,
-                                MaterialPageRoute(builder: (context) => DetailsScreen(id: store.state?.value?[index].imdbID,))),
-                              );
-                            },
-                            childCount: store.state?.value?.length,
-                          ),
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 5,
-                            mainAxisSpacing: 0,
-                            childAspectRatio: (mediaQuery.width)/(mediaQuery.height * 0.901),
-                          ),
                         ),
-                      ),
-                    ]);
+                      ]);
+                    }
+                      return const ErrorPattern(errorText: "Unknown error",);
                   },
                 ),
               ),
