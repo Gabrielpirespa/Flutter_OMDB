@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_http/components/error_pattern.dart';
 import 'package:flutter_http/components/loading.dart';
 import 'package:flutter_http/data/bloc/details_bloc/details_bloc.dart';
@@ -27,7 +28,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
         client: HttpClient(),
       ),
     );
-    _detailsBloc.inputDetails.add(
+    _detailsBloc.add(
       GetDetails(
         imdbId: widget.id,
       ),
@@ -36,7 +37,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
 
   @override
   void dispose() {
-    _detailsBloc.inputDetails.close();
+    _detailsBloc.close();
     super.dispose();
   }
 
@@ -65,17 +66,17 @@ class _DetailsScreenState extends State<DetailsScreen> {
                 right: 30,
                 left: 30,
               ),
-              child: StreamBuilder<DetailsState>(
-                stream: _detailsBloc.outputDetails,
+              child: BlocBuilder<DetailsBloc, DetailsState>(
+                bloc: _detailsBloc,
                 builder: (context, state) {
-                  if (state.data is DetailsLoadingState) {
+                  if (state is DetailsLoadingState) {
                     return SizedBox(
                       height: mediaQuery.height,
                       width: mediaQuery.width,
                       child: const Loading(),
                     );
-                  } else if (state.data is DetailsLoadedState) {
-                    final details = state.data?.details;
+                  } else if (state is DetailsLoadedState) {
+                    final details = state?.details;
 
                     return Column(children: [
                       Text(

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_http/components/error_pattern.dart';
 import 'package:flutter_http/components/loading.dart';
 import 'package:flutter_http/components/movie_card.dart';
@@ -37,7 +38,7 @@ class _SearchScreenState extends State<SearchScreen> {
   _onSearchChanged(String search) {
     if (_debounce?.isActive ?? false) _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 900), () {
-      _moviesBloc.inputMovies.add(
+      _moviesBloc.add(
         GetMovies(
           search: search,
         ),
@@ -48,7 +49,7 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void dispose() {
     super.dispose();
-    _moviesBloc.inputMovies.close();
+    _moviesBloc.close();
     _debounce?.cancel();
   }
 
@@ -108,10 +109,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
               Expanded(
-                child: StreamBuilder<MoviesState>(
-                  stream: _moviesBloc.outputMovies,
+                child: BlocBuilder<MoviesBloc, MoviesState>(
+                  bloc: _moviesBloc,
                   builder: (context, state) {
-                    if (state.data is MoviesInitialState) {
+                    if (state is MoviesInitialState) {
                       return const Center(
                         child: Text(
                           "Search for a Movie in the IMDB database",
@@ -122,12 +123,12 @@ class _SearchScreenState extends State<SearchScreen> {
                               fontWeight: FontWeight.bold),
                         ),
                       );
-                    } else if (state.data is MoviesLoadingState) {
+                    } else if (state is MoviesLoadingState) {
                       return const Loading();
-                    } else if (state.data is MoviesNotFoundErrorState) {
+                    } else if (state is MoviesNotFoundErrorState) {
                       return const ErrorPattern(errorText: "Movie not found",);
-                    } else if (state.data is MoviesLoadedState) {
-                      final list = state.data?.movies;
+                    } else if (state is MoviesLoadedState) {
+                      final list = state?.movies;
 
                       return CustomScrollView(slivers: [
                         SliverPadding(
