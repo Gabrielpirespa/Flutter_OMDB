@@ -23,7 +23,7 @@ class DetailsRepository implements IDetailsRepository {
 
     if(response.statusCode == 200){
 
-      final DescriptionModel movieDetail = DescriptionModel.fromJson(jsonDecode(response.body));
+      final DescriptionModel movieDetail = DescriptionModel.fromMap(jsonDecode(response.body));
 
       print("esse é o body da requisição: $movieDetail");
 
