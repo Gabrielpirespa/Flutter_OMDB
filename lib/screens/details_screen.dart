@@ -77,7 +77,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                   } else if (state.data is DetailsLoadedState) {
                     final details = state.data?.details;
 
-                    Column(children: [
+                    return Column(children: [
                       Text(
                         details?.Title ?? '',
                         style:
@@ -140,14 +140,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         ),
                       )
                     ]);
+                  } else {
+                    return Center(
+                      widthFactor: mediaQuery.width * 0.008,
+                      heightFactor: mediaQuery.height * 0.008,
+                      child: const ErrorPattern(
+                        errorText: "Unknown error",
+                      ),
+                    );
                   }
-                  return Center(
-                    widthFactor: mediaQuery.width *0.008,
-                    heightFactor: mediaQuery.height*0.008,
-                    child: const ErrorPattern(
-                      errorText: "Unknown error",
-                    ),
-                  );
                 },
               ),
             ),
