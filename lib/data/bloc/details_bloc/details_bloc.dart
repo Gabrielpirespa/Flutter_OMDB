@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:flutter_http/data/bloc/details_bloc/details_event.dart';
 import 'package:flutter_http/data/bloc/details_bloc/details_state.dart';

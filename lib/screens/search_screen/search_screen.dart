@@ -7,9 +7,9 @@ import 'package:flutter_http/components/movie_card.dart';
 import 'package:flutter_http/data/bloc/movies_bloc/movies_bloc.dart';
 import 'package:flutter_http/data/bloc/movies_bloc/movies_event.dart';
 import 'package:flutter_http/data/bloc/movies_bloc/movies_state.dart';
-import 'package:flutter_http/data/repositories/movies_repository.dart';
-import 'package:flutter_http/screens/details_screen.dart';
-import 'package:flutter_http/services/http_client.dart';
+import 'package:flutter_http/screens/details_screen/details_screen.dart';
+import 'package:flutter_http/screens/search_screen/search_binding.dart';
+import 'package:get/get.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({Key? key}) : super(key: key);
@@ -25,12 +25,9 @@ class _SearchScreenState extends State<SearchScreen> {
 
   @override
   void initState() {
-    _moviesBloc = MoviesBloc(
-      repository: MoviesRepository(
-        client: HttpClient(),
-      ),
-    );
     super.initState();
+    setUpSearch();
+    _moviesBloc = Get.find<MoviesBloc>();
   }
 
   Timer? _debounce; //Cria uma variável para atribuir o delay do Timer.
@@ -126,9 +123,11 @@ class _SearchScreenState extends State<SearchScreen> {
                     } else if (state is MoviesLoadingState) {
                       return const Loading();
                     } else if (state is MoviesNotFoundErrorState) {
-                      return const ErrorPattern(errorText: "Movie not found",);
+                      return const ErrorPattern(
+                        errorText: "Movie not found",
+                      );
                     } else if (state is MoviesLoadedState) {
-                      final list = state?.movies;
+                      final list = state.movies;
 
                       return CustomScrollView(slivers: [
                         SliverPadding(
@@ -140,13 +139,8 @@ class _SearchScreenState extends State<SearchScreen> {
                                   child: MovieCard(
                                     movie: list?[index],
                                   ),
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => DetailsScreen(
-                                        id: list?[index].imdbID,
-                                      ),
-                                    ),
+                                  onTap: () => Get.to(
+                                    DetailsScreen(id: list?[index].imdbID),
                                   ),
                                 );
                               },
@@ -164,7 +158,9 @@ class _SearchScreenState extends State<SearchScreen> {
                         ),
                       ]);
                     }
-                      return const ErrorPattern(errorText: "Unknown error",);
+                    return const ErrorPattern(
+                      errorText: "Unknown error",
+                    );
                   },
                 ),
               ),

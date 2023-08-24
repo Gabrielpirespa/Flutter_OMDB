@@ -5,8 +5,8 @@ import 'package:flutter_http/components/loading.dart';
 import 'package:flutter_http/data/bloc/details_bloc/details_bloc.dart';
 import 'package:flutter_http/data/bloc/details_bloc/details_event.dart';
 import 'package:flutter_http/data/bloc/details_bloc/details_state.dart';
-import 'package:flutter_http/data/repositories/details_repository.dart';
-import 'package:flutter_http/services/http_client.dart';
+import 'package:flutter_http/screens/details_screen/details_binding.dart';
+import 'package:get/get.dart';
 
 class DetailsScreen extends StatefulWidget {
   final String? id;
@@ -23,11 +23,8 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _detailsBloc = DetailsBloc(
-      repository: DetailsRepository(
-        client: HttpClient(),
-      ),
-    );
+    setUpDetails();
+    _detailsBloc = Get.find<DetailsBloc>();
     _detailsBloc.add(
       GetDetails(
         imdbId: widget.id,
@@ -76,7 +73,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                       child: const Loading(),
                     );
                   } else if (state is DetailsLoadedState) {
-                    final details = state?.details;
+                    final details = state.details;
 
                     return Column(children: [
                       Text(
